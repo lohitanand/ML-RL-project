@@ -1,0 +1,646 @@
+<title>Pursuit Learning Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --ground:#E9EDF1; --surface:#F6F8FA; --surface-2:#FFFFFF;
+  --ink:#16202B; --muted:#586475; --line:#CBD3DC; --line-soft:#E0E5EA;
+  --cop:#2450D8; --thief:#C07C00; --amb:#CB2D3A; --ok:#1C8757;
+  --road:#F4F6F8; --building:#BEC7D1; --traffic:#EE9A2F; --block:#3A4553; --hospital:#1C8757;
+  --on-accent:#FFFFFF;
+  --font-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --ground:#0D131A; --surface:#131B24; --surface-2:#18212B;
+    --ink:#E3E8EE; --muted:#93A0B0; --line:#2B3643; --line-soft:#1F2832;
+    --cop:#7897FF; --thief:#F0B13A; --amb:#FF6772; --ok:#4CC08A;
+    --road:#1B242E; --building:#2B3744; --traffic:#B8752A; --block:#8B97A6; --hospital:#4CC08A;
+    --on-accent:#0D131A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#0D131A; --surface:#131B24; --surface-2:#18212B;
+  --ink:#E3E8EE; --muted:#93A0B0; --line:#2B3643; --line-soft:#1F2832;
+  --cop:#7897FF; --thief:#F0B13A; --amb:#FF6772; --ok:#4CC08A;
+  --road:#1B242E; --building:#2B3744; --traffic:#B8752A; --block:#8B97A6; --hospital:#4CC08A;
+  --on-accent:#0D131A;
+}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+.app{--accent:var(--cop)}
+.app[data-env="amb"]{--accent:var(--amb)}
+.wrap{max-width:1120px;margin:0 auto;padding-inline:16px;padding-block:28px 48px;display:grid;gap:20px}
+@media (min-width:700px){.wrap{padding-inline:28px}}
+
+.hero{display:grid;gap:6px}
+.eyebrow{margin:0;font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{margin:0;font-family:var(--font-display);font-weight:700;font-size:clamp(2.2rem,5vw,3.1rem);line-height:1;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.lead{margin:4px 0 0;max-width:66ch;color:var(--muted)}
+h2{margin:0;font-family:var(--font-display);font-weight:600;font-size:1.3rem;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+
+.tabs{display:flex;flex-wrap:wrap;gap:4px;padding:4px;background:var(--surface);border:1px solid var(--line);border-radius:10px;width:fit-content;max-width:100%}
+.tabs button{font:500 14px/1 var(--font-body);color:var(--muted);background:transparent;border:0;border-radius:7px;padding:10px 14px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.tabs button[aria-selected="true"]{background:var(--surface-2);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08),0 0 0 1px var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.dot.cop{background:var(--cop)} .dot.amb{background:var(--amb)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start}
+@media (max-width:880px){.stage{grid-template-columns:minmax(0,1fr)}}
+.board,.panel,.card{background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.board{padding:12px;display:grid;gap:10px}
+.board-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;min-height:26px}
+.chip{font:500 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.chip[data-mode="train"],.chip[data-mode="fast"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.chip[data-mode="rule"]{border-color:var(--thief);color:var(--thief);background:color-mix(in srgb,var(--thief) 12%,transparent)}
+.chip[data-mode="test"],.chip[data-mode="result"]{border-color:var(--ok);color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent)}
+.live{font:400 13px/1.4 var(--font-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+#main{display:block;width:100%;max-width:620px;aspect-ratio:1;margin:0 auto;border-radius:6px}
+.key{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);justify-content:center}
+.key span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;flex:none}
+
+.panel{padding:16px;display:grid;gap:18px}
+.controls{display:grid;gap:8px}
+.btn{font:500 14px/1.2 var(--font-body);min-height:40px;padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;text-align:left}
+.btn:hover{border-color:var(--accent)}
+.btn:disabled{opacity:.55;cursor:default;border-color:var(--line)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.ghost{background:transparent;color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.speed{display:grid;gap:4px;margin-top:4px}
+.speed label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.speed output{font-family:var(--font-mono);color:var(--ink);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--accent)}
+
+.stats{margin:0;display:grid;grid-template-columns:1fr auto;gap:0;border-top:1px solid var(--line)}
+.stats dt,.stats dd{padding:7px 0;border-bottom:1px solid var(--line-soft);margin:0;font-size:13.5px}
+.stats dt{color:var(--muted)}
+.stats dd{font-family:var(--font-mono);font-variant-numeric:tabular-nums;text-align:right}
+.mapping{display:grid;gap:10px}
+.mapping h2{font-size:1.05rem}
+.mapping dl{margin:0;display:grid;gap:8px}
+.mapping dt{font:500 11px/1 var(--font-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.mapping dd{margin:3px 0 0;font-size:13.5px;line-height:1.45}
+.mapping .algo{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin:0}
+
+.card{padding:16px;display:grid;gap:12px}
+.card-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 20px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lg-dot{width:7px;height:7px;border-radius:50%;background:color-mix(in srgb,var(--accent) 45%,transparent)}
+.lg-line{width:18px;height:3px;border-radius:2px;background:var(--accent)}
+.lg-dash{width:18px;height:0;border-top:2px dashed var(--ok)}
+#chart{display:block;width:100%;height:250px}
+.muted{color:var(--muted)} .small{font-size:13px;margin:0}
+.snaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px}
+.snaps figure{margin:0;display:grid;gap:6px}
+.snaps canvas{display:block;width:100%;aspect-ratio:1;border-radius:5px;border:1px solid var(--line-soft)}
+.snaps figcaption{font-size:12.5px;line-height:1.35;color:var(--muted)}
+.snaps figcaption b{display:block;color:var(--ink);font-weight:600;font-family:var(--font-mono);font-size:12px;letter-spacing:.04em}
+.snaps .empty{grid-column:1/-1;margin:0;padding:18px;border:1px dashed var(--line);border-radius:8px;color:var(--muted);font-size:13.5px;text-align:center}
+.foot{font-size:12.5px;color:var(--muted);max-width:70ch}
+</style>
+
+<div class="wrap app" id="app" data-env="cop">
+  <header class="hero">
+    <p class="eyebrow">Reinforcement learning · Cops &amp; Ambulances</p>
+    <h1>Pursuit Learning Lab</h1>
+    <p class="lead">Both vehicles start out knowing nothing and move at random, so at first the cop catches no one and the ambulance rarely arrives. After each move the agent updates its Q-table, a record of which move worked in which situation. Train them and watch the pursuit get tighter.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Scenario">
+    <button role="tab" id="tab-cop" data-env="cop" aria-selected="true"><span class="dot cop"></span>Cop vs 3 thieves</button>
+    <button role="tab" id="tab-amb" data-env="amb" aria-selected="false"><span class="dot amb"></span>Ambulance dispatch</button>
+  </div>
+
+  <section class="stage">
+    <div class="board">
+      <div class="board-head"><span class="chip" id="chip" data-mode="train">Training</span><span class="live" id="live"></span></div>
+      <canvas id="main" role="img" aria-label="Live simulation"></canvas>
+      <div class="key" id="key"></div>
+    </div>
+
+    <aside class="panel">
+      <div class="controls">
+        <button class="btn primary" id="btnTrain" type="button">Pause training</button>
+        <button class="btn" id="btnFast" type="button">Fast-train +250 episodes</button>
+        <button class="btn" id="btnTest" type="button">Test run (no random moves)</button>
+        <button class="btn" id="btnRule" type="button">Compare: steer-to-target rule</button>
+        <div class="speed">
+          <label for="speed">Watch speed <output id="speedOut" for="speed">60 steps/s</output></label>
+          <input type="range" id="speed" min="0" max="6" step="1" value="3">
+        </div>
+        <button class="btn ghost" id="btnReset" type="button">Reset agent to untrained</button>
+      </div>
+      <dl class="stats" id="stats"></dl>
+      <div class="mapping">
+        <h2>From control loop to RL</h2>
+        <dl id="mapping"></dl>
+        <p class="algo" id="algo"></p>
+      </div>
+    </aside>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Learning curve</h2><div class="legend" id="legend"></div></div>
+    <canvas id="chart" role="img" aria-label="Learning curve"></canvas>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><h2>Snapshots from training</h2><p class="muted small">The route taken in training episodes 1, 10, 50, 150, 400 and 1000, by the same agent as it learns.</p></div>
+    <div class="snaps" id="snaps"></div>
+  </section>
+
+  <p class="foot">Tabular Q-learning with ε-greedy exploration, running live in this page. In the Python version of the project, the same environments would be Gymnasium envs trained with PPO (Stable-Baselines3).</p>
+</div>
+
+<script>
+(() => {
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const rint = n => Math.floor(Math.random() * n);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const manh = (x1, y1, x2, y2) => Math.abs(x1 - x2) + Math.abs(y1 - y2);
+const DIRS = [[0,-1],[0,1],[-1,0],[1,0]];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const C = {};
+function readColors(){
+  const cs = getComputedStyle(document.documentElement);
+  ['ground','surface','surface-2','ink','muted','line','line-soft','cop','thief','amb','ok','road','building','traffic','block','hospital','on-accent']
+    .forEach(n => C[n] = cs.getPropertyValue('--' + n).trim());
+}
+function hexA(hex, a){
+  let h = (hex || '#000').replace('#','');
+  if (h.length === 3) h = h.split('').map(c => c + c).join('');
+  const n = parseInt(h, 16);
+  return `rgba(${(n>>16)&255},${(n>>8)&255},${n&255},${a})`;
+}
+function rr(g, x, y, w, h, r){
+  g.beginPath(); g.moveTo(x+r, y); g.lineTo(x+w-r, y); g.quadraticCurveTo(x+w, y, x+w, y+r);
+  g.lineTo(x+w, y+h-r); g.quadraticCurveTo(x+w, y+h, x+w-r, y+h); g.lineTo(x+r, y+h);
+  g.quadraticCurveTo(x, y+h, x, y+h-r); g.lineTo(x, y+r); g.quadraticCurveTo(x, y, x+r, y); g.closePath();
+}
+function fit(cv){
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+  if (cv.width !== w*d || cv.height !== h*d){ cv.width = w*d; cv.height = h*d; }
+  const g = cv.getContext('2d'); g.setTransform(d,0,0,d,0,0);
+  return { g, W: w, H: h };
+}
+function polyline(g, pts, c, color, width, dash){
+  if (!pts || pts.length < 2) return;
+  g.save(); g.strokeStyle = color; g.lineWidth = width; g.lineJoin = 'round'; g.lineCap = 'round';
+  g.setLineDash(dash || []); g.beginPath();
+  pts.forEach((p, i) => { const x = (p[0]+.5)*c, y = (p[1]+.5)*c; i ? g.lineTo(x, y) : g.moveTo(x, y); });
+  g.stroke(); g.restore();
+}
+
+/* ---------- Q-learning agent ---------- */
+class QAgent{
+  constructor(nA, cfg){ this.nA = nA; Object.assign(this, cfg); this.reset(); }
+  reset(){ this.Q = new Map(); this.eps = this.eps0; }
+  // actions not allowed in state s start at -Infinity, so they are never chosen (action masking)
+  q(s, valid){ let v = this.Q.get(s); if (!v){ v = new Float64Array(this.nA).fill(-Infinity); valid.forEach(a => v[a] = 0); this.Q.set(s, v); } return v; }
+  greedy(s, valid){
+    const v = this.Q.get(s); if (!v) return valid[rint(valid.length)];
+    let best = -Infinity, ids = [];
+    for (const a of valid){
+      if (v[a] > best + 1e-9){ best = v[a]; ids = [a]; }
+      else if (Math.abs(v[a] - best) <= 1e-9) ids.push(a);
+    }
+    return ids[rint(ids.length)];
+  }
+  act(s, valid, explore){ return (explore && Math.random() < this.eps) ? valid[rint(valid.length)] : this.greedy(s, valid); }
+  // Q(s,a) <- Q(s,a) + alpha * [ r + gamma * max_a' Q(s',a') - Q(s,a) ]
+  learn(s, a, r, s2, terminal, valid){
+    const v = this.q(s, valid); let target = r;
+    if (!terminal){ const v2 = this.Q.get(s2); let m = 0; if (v2){ m = -Infinity; for (const x of v2) if (x > m) m = x; } target += this.gamma * m; }
+    v[a] += this.alpha * (target - v[a]);
+  }
+  endEpisode(){ this.eps = Math.max(this.epsMin, this.eps * this.epsDecay); }
+}
+
+/* ---------- Cop environment ---------- */
+const COP_N = 12, COP_THIEVES = 3, COP_MAX = 300;
+class CopEnv{
+  reset(){
+    this.cop = [rint(COP_N), rint(COP_N)]; this.thieves = [];
+    while (this.thieves.length < COP_THIEVES){
+      const t = { x: rint(COP_N), y: rint(COP_N), caught: false };
+      if (manh(t.x, t.y, this.cop[0], this.cop[1]) < 5) continue;
+      if (this.thieves.some(o => o.x === t.x && o.y === t.y)) continue;
+      this.thieves.push(t);
+    }
+    this.steps = 0; this.caught = 0; this.done = false;
+    this.copTrail = [[...this.cop]]; this.thiefTrails = this.thieves.map(t => [[t.x, t.y]]);
+    return this.state();
+  }
+  nearest(){
+    let best = -1, bd = 1e9;
+    this.thieves.forEach((t, i) => { if (t.caught) return; const d = manh(t.x, t.y, this.cop[0], this.cop[1]); if (d < bd){ bd = d; best = i; } });
+    return best;
+  }
+  valid(){ return [0, 1, 2, 3]; }
+  // the deck's original control algorithm: steer towards the nearest thief
+  rule(){
+    const t = this.thieves[this.nearest()], dx = t.x - this.cop[0], dy = t.y - this.cop[1];
+    if (Math.abs(dx) >= Math.abs(dy)) return dx > 0 ? 3 : 2;
+    return dy > 0 ? 1 : 0;
+  }
+  state(){
+    const i = this.nearest(); if (i < 0) return -1;
+    const t = this.thieves[i];
+    const dx = clamp(t.x - this.cop[0], -5, 5), dy = clamp(t.y - this.cop[1], -5, 5);
+    const ex = t.x === 0 ? 0 : t.x === COP_N-1 ? 2 : 1, ey = t.y === 0 ? 0 : t.y === COP_N-1 ? 2 : 1;
+    return ((dx+5)*11 + (dy+5))*9 + ex*3 + ey;
+  }
+  moveThief(t){
+    const [cx, cy] = this.cop, opts = [[t.x, t.y]];
+    for (const [dx, dy] of DIRS){
+      const x = t.x+dx, y = t.y+dy;
+      if (x < 0 || y < 0 || x >= COP_N || y >= COP_N) continue;
+      if (x === cx && y === cy) continue;
+      if (this.thieves.some(o => o !== t && !o.caught && o.x === x && o.y === y)) continue;
+      opts.push([x, y]);
+    }
+    let pick;
+    if (Math.random() < 0.15) pick = opts[rint(opts.length)];
+    else {
+      let best = -1, bs = [];
+      for (const o of opts){
+        let free = 0; for (const [dx, dy] of DIRS){ const x = o[0]+dx, y = o[1]+dy; if (x>=0 && y>=0 && x<COP_N && y<COP_N) free++; }
+        const sc = manh(o[0], o[1], cx, cy)*10 + free;
+        if (sc > best){ best = sc; bs = [o]; } else if (sc === best) bs.push(o);
+      }
+      pick = bs[rint(bs.length)];
+    }
+    t.x = pick[0]; t.y = pick[1];
+  }
+  step(a){
+    let r = -0.05;
+    const tgt = this.thieves[this.nearest()];
+    const prevD = manh(tgt.x, tgt.y, this.cop[0], this.cop[1]);
+    const nx = this.cop[0] + DIRS[a][0], ny = this.cop[1] + DIRS[a][1];
+    if (nx < 0 || ny < 0 || nx >= COP_N || ny >= COP_N) r -= 0.1; else this.cop = [nx, ny];
+    for (const t of this.thieves){
+      if (!t.caught && t.x === this.cop[0] && t.y === this.cop[1]){ t.caught = true; this.caught++; r += 20; }
+    }
+    if (!tgt.caught) r += 0.1 * (prevD - manh(tgt.x, tgt.y, this.cop[0], this.cop[1]));
+    for (const t of this.thieves){ if (!t.caught && Math.random() < 0.7) this.moveThief(t); }
+    this.thieves.forEach((t, i) => {
+      if (t.caught) return; const tr = this.thiefTrails[i], l = tr[tr.length-1];
+      if (l[0] !== t.x || l[1] !== t.y) tr.push([t.x, t.y]);
+    });
+    this.copTrail.push([...this.cop]);
+    this.steps++;
+    const terminal = this.caught === COP_THIEVES;
+    this.done = terminal || this.steps >= COP_MAX;
+    return { s: this.state(), r, done: this.done, terminal };
+  }
+}
+
+/* ---------- Ambulance environment ---------- */
+const AMB_N = 17, AMB_MAX = 500;
+const GRID = []; // 0 building, 1 road, 2 traffic, 3 closed
+for (let y = 0; y < AMB_N; y++){ const row = []; for (let x = 0; x < AMB_N; x++) row.push((x % 4 === 0 || y % 4 === 0) ? 1 : 0); GRID.push(row); }
+[[5,2],[6,2],[7,2],[14,5],[14,6],[14,7]].forEach(([x,y]) => GRID[y][x] = 1);          // alleys
+for (let x = 5; x <= 11; x++) GRID[8][x] = 2;                                           // jammed central avenue
+for (let y = 9; y <= 13; y++) GRID[y][12] = 2;
+for (let x = 9; x <= 15; x++) GRID[0][x] = 2;
+[[4,6],[10,16],[14,12]].forEach(([x,y]) => GRID[y][x] = 3);                             // road closures
+const HOSPITAL = [0, 8];
+const SITES = [[16,2],[12,14],[16,16],[6,0],[10,4],[4,13]];
+const SITE_NAMES = ['A','B','C','D','E','F'];
+const passable = (x, y) => x >= 0 && y >= 0 && x < AMB_N && y < AMB_N && (GRID[y][x] === 1 || GRID[y][x] === 2);
+const cellCost = (x, y) => GRID[y][x] === 2 ? 5 : 1;
+function shortest(from, to){
+  const n = AMB_N*AMB_N, dist = new Array(n).fill(Infinity), seen = new Array(n).fill(false);
+  dist[from[1]*AMB_N + from[0]] = 0;
+  for (;;){
+    let u = -1, bd = Infinity;
+    for (let i = 0; i < n; i++) if (!seen[i] && dist[i] < bd){ bd = dist[i]; u = i; }
+    if (u < 0) break; seen[u] = true;
+    const ux = u % AMB_N, uy = (u / AMB_N) | 0;
+    if (ux === to[0] && uy === to[1]) return bd;
+    for (const [dx, dy] of DIRS){ const x = ux+dx, y = uy+dy; if (!passable(x, y)) continue; const v = y*AMB_N + x, nd = bd + cellCost(x, y); if (nd < dist[v]) dist[v] = nd; }
+  }
+  return Infinity;
+}
+const OPTIMAL = SITES.map(s => shortest(HOSPITAL, s));
+class AmbEnv{
+  reset(){
+    this.ti = rint(SITES.length); this.pos = [...HOSPITAL]; this.ticks = 0;
+    this.done = false; this.reached = false; this.trail = [[...this.pos]];
+    return this.state();
+  }
+  state(){ return this.ti*AMB_N*AMB_N + this.pos[1]*AMB_N + this.pos[0]; }
+  // action masking: the ambulance can only drive onto road cells
+  valid(){ const out = []; DIRS.forEach(([dx, dy], a) => { if (passable(this.pos[0]+dx, this.pos[1]+dy)) out.push(a); }); return out; }
+  // the deck's original control algorithm: take the road that ends closest to the target
+  rule(){
+    const [tx, ty] = SITES[this.ti]; let best = -1, bd = Infinity;
+    for (const a of this.valid()){ const d = manh(this.pos[0]+DIRS[a][0], this.pos[1]+DIRS[a][1], tx, ty); if (d < bd){ bd = d; best = a; } }
+    return best;
+  }
+  step(a){
+    const nx = this.pos[0] + DIRS[a][0], ny = this.pos[1] + DIRS[a][1];
+    this.pos = [nx, ny];
+    const cost = cellCost(nx, ny), r = -cost;
+    this.ticks += cost; this.trail.push([...this.pos]);
+    const t = SITES[this.ti];
+    if (this.pos[0] === t[0] && this.pos[1] === t[1]){ this.reached = true; this.done = true; }
+    else if (this.ticks >= AMB_MAX) this.done = true;
+    return { s: this.state(), r, done: this.done, terminal: this.reached };
+  }
+}
+
+/* ---------- drawing ---------- */
+function drawCop(g, W, S, small){
+  const c = W / COP_N;
+  g.fillStyle = C['surface-2']; g.fillRect(0, 0, W, W);
+  g.strokeStyle = C['line-soft']; g.lineWidth = 1; g.beginPath();
+  for (let i = 1; i < COP_N; i++){ g.moveTo(i*c, 0); g.lineTo(i*c, W); g.moveTo(0, i*c); g.lineTo(W, i*c); }
+  g.stroke();
+  g.strokeStyle = C.line; g.lineWidth = 2; g.strokeRect(1, 1, W-2, W-2);
+  S.thiefTrails.forEach(tr => polyline(g, tr, c, hexA(C.thief, .4), small ? 1 : 1.5, [3, 3]));
+  polyline(g, S.copTrail, c, hexA(C.cop, .5), small ? 1.3 : 2.4);
+  S.thieves.forEach(t => {
+    const x = (t.x+.5)*c, y = (t.y+.5)*c, s = c*.32;
+    if (t.caught){
+      g.strokeStyle = C.muted; g.lineWidth = small ? 1.2 : 2;
+      g.beginPath(); g.arc(x, y, s, 0, Math.PI*2); g.stroke();
+      g.beginPath(); g.moveTo(x-s*.55, y-s*.55); g.lineTo(x+s*.55, y+s*.55); g.moveTo(x+s*.55, y-s*.55); g.lineTo(x-s*.55, y+s*.55); g.stroke();
+    } else {
+      g.fillStyle = C.thief; g.beginPath(); g.moveTo(x, y-s*1.1); g.lineTo(x+s*1.1, y); g.lineTo(x, y+s*1.1); g.lineTo(x-s*1.1, y); g.closePath(); g.fill();
+    }
+  });
+  const x = S.cop[0]*c, y = S.cop[1]*c, p = c*.14;
+  g.fillStyle = C.cop; rr(g, x+p, y+p, c-2*p, c-2*p, c*.16); g.fill();
+  if (!small){ g.fillStyle = C['surface-2']; g.fillRect(x+c*.3, y+c*.3, c*.4, c*.12); g.fillStyle = C.amb; g.fillRect(x+c*.3, y+c*.3, c*.2, c*.12); }
+}
+function drawAmb(g, W, S, small, time){
+  const c = W / AMB_N;
+  g.fillStyle = C.building; g.fillRect(0, 0, W, W);
+  for (let y = 0; y < AMB_N; y++) for (let x = 0; x < AMB_N; x++){
+    const v = GRID[y][x]; if (v === 0) continue;
+    g.fillStyle = C.road; g.fillRect(x*c, y*c, c+.5, c+.5);
+    if (v === 2){
+      g.fillStyle = hexA(C.traffic, .55); g.fillRect(x*c, y*c, c+.5, c+.5);
+      if (!small){ g.strokeStyle = hexA(C.traffic, .9); g.lineWidth = 1.2; g.beginPath(); g.moveTo(x*c+c*.2, y*c+c*.8); g.lineTo(x*c+c*.8, y*c+c*.2); g.stroke(); }
+    }
+    if (v === 3){
+      g.fillStyle = C.block; g.fillRect(x*c+c*.08, y*c+c*.08, c*.84, c*.84);
+      g.strokeStyle = C['surface-2']; g.lineWidth = small ? 1 : 2; g.beginPath();
+      g.moveTo(x*c+c*.28, y*c+c*.28); g.lineTo(x*c+c*.72, y*c+c*.72); g.moveTo(x*c+c*.72, y*c+c*.28); g.lineTo(x*c+c*.28, y*c+c*.72); g.stroke();
+    }
+  }
+  SITES.forEach((s, i) => {
+    if (i === S.ti) return;
+    const x = (s[0]+.5)*c, y = (s[1]+.5)*c;
+    g.strokeStyle = hexA(C.amb, .45); g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, c*.36, 0, Math.PI*2); g.stroke();
+    if (!small){ g.fillStyle = C.muted; g.font = `600 ${c*.42}px "IBM Plex Sans", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(SITE_NAMES[i], x, y+1); }
+  });
+  const hx = HOSPITAL[0]*c, hy = HOSPITAL[1]*c;
+  g.fillStyle = C.hospital; rr(g, hx+c*.06, hy+c*.06, c*.88, c*.88, c*.18); g.fill();
+  g.fillStyle = C['surface-2']; g.font = `700 ${c*.6}px "IBM Plex Sans", sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('H', hx+c/2, hy+c/2+1);
+  const t = SITES[S.ti], tx = (t[0]+.5)*c, ty = (t[1]+.5)*c;
+  const pulse = (reduceMotion || small) ? 0 : (Math.sin(time*5)+1)/2;
+  g.fillStyle = hexA(C.amb, .18 + .12*pulse); g.beginPath(); g.arc(tx, ty, c*(.62 + .22*pulse), 0, Math.PI*2); g.fill();
+  g.fillStyle = C.amb; g.beginPath(); g.arc(tx, ty, c*.4, 0, Math.PI*2); g.fill();
+  g.fillStyle = C['surface-2']; g.fillRect(tx-c*.07, ty-c*.24, c*.14, c*.48); g.fillRect(tx-c*.24, ty-c*.07, c*.48, c*.14);
+  polyline(g, S.trail, c, hexA(C.amb, .55), small ? 1.3 : 2.4);
+  const ax = S.pos[0]*c, ay = S.pos[1]*c;
+  g.fillStyle = C['surface-2']; g.strokeStyle = C.amb; g.lineWidth = small ? 1.4 : 2.2;
+  rr(g, ax+c*.12, ay+c*.12, c*.76, c*.76, c*.16); g.fill(); g.stroke();
+  if (!small){ g.fillStyle = C.amb; g.fillRect(ax+c*.44, ay+c*.26, c*.12, c*.48); g.fillRect(ax+c*.26, ay+c*.44, c*.48, c*.12); }
+}
+
+/* ---------- scenario definitions ---------- */
+const MILESTONES = [1, 10, 50, 150, 400, 1000];
+const DEFS = {
+  cop: {
+    make: () => new CopEnv(),
+    agent: () => new QAgent(4, { alpha: .2, gamma: .95, eps0: 1, epsDecay: .985, epsMin: .02 }),
+    fastN: 250,
+    draw: drawCop,
+    live: e => `step ${e.steps} / ${COP_MAX} · ${e.caught}/3 caught`,
+    record: e => ({ value: e.caught, success: e.caught === COP_THIEVES, steps: e.steps }),
+    summary: e => e.caught === COP_THIEVES ? `Caught all 3 thieves in ${e.steps} time steps` : `Caught ${e.caught}/3, out of time at ${e.steps} steps`,
+    caption: r => r.success ? `All 3 caught · ${r.steps} steps` : `${r.value}/3 caught · timed out`,
+    snapshot: e => ({ cop: [...e.cop], thieves: e.thieves.map(t => ({ ...t })), copTrail: e.copTrail.map(p => [...p]), thiefTrails: e.thiefTrails.map(tr => tr.map(p => [...p])) }),
+    key: `<span><i class="sw" style="background:var(--cop)"></i>Cop</span><span><i class="sw" style="background:var(--thief);transform:rotate(45deg) scale(.8)"></i>Thief</span><span><i class="sw" style="border:2px solid var(--muted);border-radius:50%"></i>Caught</span><span><i class="sw" style="height:3px;background:var(--cop);opacity:.6"></i>Cop's path this episode</span>`,
+    mapping: [
+      ['State (what it sees)', 'Distance and direction to the nearest free thief (dx, dy), plus whether that thief is pinned against a wall.'],
+      ['Action (direction)', 'Move one cell up, down, left or right each time step. Thieves flee at about 70% of the cop\'s speed.'],
+      ['Reward', '+20 per catch, −0.05 per time step, and a small bonus for closing the distance.'],
+      ['Stopping condition', 'Distance reaches 0 for all 3 thieves, or 300 time steps pass.']
+    ],
+    algo: 'Q-learning · α 0.2 · γ 0.95 · ε 1.0 → 0.02',
+    legend: `<span><i class="lg-dot"></i>One training episode</span><span><i class="lg-line"></i>25-episode average</span>`,
+    stats: X => {
+      const h = X.history.slice(-50), n = h.length;
+      const succ = n ? Math.round(100 * h.filter(r => r.success).length / n) + '%' : '—';
+      const avg = n ? (h.reduce((a, r) => a + r.value, 0) / n).toFixed(1) + ' / 3' : '—';
+      const ok = h.filter(r => r.success), st = ok.length ? Math.round(ok.reduce((a, r) => a + r.steps, 0) / ok.length) : '—';
+      return [['Training episodes', X.episode], ['Random moves (ε)', Math.round(X.agent.eps*100) + '%'], ['Caught all 3, last 50', succ], ['Avg caught, last 50', avg], ['Avg steps when all caught', st], ['Situations learned', X.agent.Q.size]];
+    }
+  },
+  amb: {
+    make: () => new AmbEnv(),
+    agent: () => new QAgent(4, { alpha: 1, gamma: .999, eps0: 1, epsDecay: .99, epsMin: .01 }),
+    fastN: 1000,
+    draw: drawAmb,
+    live: e => `emergency at ${SITE_NAMES[e.ti]} · ${e.ticks} min driving · shortest ${OPTIMAL[e.ti]} min`,
+    record: e => ({ value: e.reached ? Math.min(e.ticks, AMB_MAX) : AMB_MAX, success: e.reached, optimal: OPTIMAL[e.ti], site: e.ti }),
+    summary: e => e.reached ? `Reached ${SITE_NAMES[e.ti]} in ${e.ticks} min (shortest possible ${OPTIMAL[e.ti]} min)` : `Did not reach ${SITE_NAMES[e.ti]} within ${AMB_MAX} min`,
+    caption: r => r.success ? `Site ${SITE_NAMES[r.site]} · ${r.value} min (best ${r.optimal})` : `Site ${SITE_NAMES[r.site]} · never arrived`,
+    snapshot: e => ({ ti: e.ti, pos: [...e.pos], trail: e.trail.map(p => [...p]) }),
+    key: `<span><i class="sw" style="background:var(--hospital)"></i>Hospital</span><span><i class="sw" style="background:var(--amb);border-radius:50%"></i>Emergency</span><span><i class="sw" style="background:var(--surface-2);border:2px solid var(--amb)"></i>Ambulance</span><span><i class="sw" style="background:var(--traffic);opacity:.7"></i>Traffic (5 min per cell)</span><span><i class="sw" style="background:var(--block)"></i>Road closed</span>`,
+    mapping: [
+      ['State (what it sees)', 'Its current position on the road grid, and which of the six emergency sites (A–F) it has been sent to.'],
+      ['Action (direction)', 'Drive one cell up, down, left or right. Moves into buildings or closed roads are not allowed (action masking).'],
+      ['Reward', '−1 per minute driven. A traffic cell costs 5 minutes, so jams hurt.'],
+      ['Stopping condition', 'Arriving at the emergency site, or 500 minutes pass.']
+    ],
+    algo: 'Q-learning · α 1.0 · γ 0.999 · ε 1.0 → 0.01',
+    legend: `<span><i class="lg-dot"></i>One training episode</span><span><i class="lg-line"></i>25-episode average</span><span><i class="lg-dash"></i>Shortest possible route</span>`,
+    stats: X => {
+      const h = X.history.slice(-50), n = h.length;
+      const succ = n ? Math.round(100 * h.filter(r => r.success).length / n) + '%' : '—';
+      const avg = n ? Math.round(h.reduce((a, r) => a + r.value, 0) / n) + ' min' : '—';
+      const opt = n ? Math.round(h.reduce((a, r) => a + r.optimal, 0) / n) + ' min' : '—';
+      return [['Training episodes', X.episode], ['Random moves (ε)', Math.round(X.agent.eps*100) + '%'], ['Arrived, last 50', succ], ['Avg response time, last 50', avg], ['Shortest possible, same trips', opt], ['Situations learned', X.agent.Q.size]];
+    }
+  }
+};
+
+function makeScenario(key){
+  const def = DEFS[key], env = def.make();
+  return { key, def, env, agent: def.agent(), s: env.reset(), mode: 'idle', episode: 0, history: [], milestones: [], fastRemaining: 0, fastTotal: 0, testResult: null, needsReset: false };
+}
+const SC = { cop: makeScenario('cop'), amb: makeScenario('amb') };
+let active = 'cop';
+let chartDirty = true, snapsDirty = true, panelDirty = true;
+
+function finishTrainEpisode(X){
+  X.episode++;
+  const rec = X.def.record(X.env);
+  X.history.push(rec);
+  X.agent.endEpisode();
+  if (MILESTONES.includes(X.episode)){ X.milestones.push({ ep: X.episode, rec, snap: X.def.snapshot(X.env) }); if (X === SC[active]) snapsDirty = true; }
+  if (X === SC[active]){ chartDirty = true; panelDirty = true; }
+}
+function stepOnce(X){
+  const train = X.mode === 'train', valid = X.env.valid();
+  const a = X.mode === 'rule' ? X.env.rule() : X.agent.act(X.s, valid, train);
+  const res = X.env.step(a);
+  if (train) X.agent.learn(X.s, a, res.r, res.s, res.terminal, valid);
+  X.s = res.s;
+  if (res.done){
+    if (train){ finishTrainEpisode(X); X.s = X.env.reset(); }
+    else { X.testResult = (X.mode === 'rule' ? 'Steer-to-target rule: ' : 'Trained agent: ') + X.def.summary(X.env); X.mode = 'idle'; X.needsReset = true; panelDirty = true; }
+  }
+}
+function headlessEpisode(X){
+  let s = X.env.reset();
+  for (;;){
+    const valid = X.env.valid(), a = X.agent.act(s, valid, true), res = X.env.step(a);
+    X.agent.learn(s, a, res.r, res.s, res.terminal, valid); s = res.s;
+    if (res.done) break;
+  }
+  finishTrainEpisode(X);
+}
+function startTest(X, mode){ X.mode = mode || 'test'; X.testResult = null; X.s = X.env.reset(); X.needsReset = false; panelDirty = true; }
+
+/* ---------- UI ---------- */
+const SPEEDS = [{ every: 8, n: 1, label: '8' }, { every: 4, n: 1, label: '15' }, { every: 2, n: 1, label: '30' }, { every: 1, n: 1, label: '60' }, { every: 1, n: 3, label: '180' }, { every: 1, n: 10, label: '600' }, { every: 1, n: 40, label: '2,400' }];
+let speedIdx = 3;
+const el = { app: $('#app'), chip: $('#chip'), live: $('#live'), main: $('#main'), chart: $('#chart'), key: $('#key'), stats: $('#stats'), mapping: $('#mapping'), algo: $('#algo'), legend: $('#legend'), snaps: $('#snaps'), train: $('#btnTrain'), fast: $('#btnFast'), test: $('#btnTest'), rule: $('#btnRule'), reset: $('#btnReset'), speed: $('#speed'), speedOut: $('#speedOut') };
+
+function renderStatic(){
+  const X = SC[active], d = X.def;
+  el.app.dataset.env = active;
+  document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.env === active)));
+  el.key.innerHTML = d.key; el.legend.innerHTML = d.legend; el.algo.textContent = d.algo;
+  el.mapping.innerHTML = d.mapping.map(([t, v]) => `<div><dt>${t}</dt><dd>${v}</dd></div>`).join('');
+  chartDirty = snapsDirty = panelDirty = true;
+}
+function renderPanel(){
+  const X = SC[active];
+  el.stats.innerHTML = X.def.stats(X).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  const fasting = X.fastRemaining > 0;
+  el.train.textContent = X.mode === 'train' ? 'Pause training' : (X.episode ? 'Resume training & watch' : 'Start training & watch');
+  el.fast.textContent = fasting ? `Training… ${X.fastTotal - X.fastRemaining} / ${X.fastTotal}` : `Fast-train +${X.def.fastN} episodes`;
+  [el.train, el.fast, el.test, el.rule, el.reset].forEach(b => b.disabled = fasting);
+}
+function renderStatus(){
+  const X = SC[active];
+  let mode, chip, text;
+  if (X.fastRemaining > 0){ mode = 'fast'; chip = 'Fast-training'; text = `episode ${X.episode} · no drawing, full speed`; }
+  else if (X.mode === 'train'){ mode = 'train'; chip = 'Training'; text = `Episode ${X.episode + 1} · ${X.def.live(X.env)}`; }
+  else if (X.mode === 'test'){ mode = 'test'; chip = 'Test run'; text = X.def.live(X.env); }
+  else if (X.mode === 'rule'){ mode = 'rule'; chip = 'Rule (no learning)'; text = X.def.live(X.env); }
+  else if (X.testResult){ mode = 'result'; chip = 'Test result'; text = X.testResult; }
+  else { mode = 'idle'; chip = 'Paused'; text = `Episode ${X.episode + 1} · ${X.def.live(X.env)}`; }
+  if (el.chip.dataset.mode !== mode){ el.chip.dataset.mode = mode; el.chip.textContent = chip; }
+  if (el.live.textContent !== text) el.live.textContent = text;
+}
+function niceStep(raw){ const p = Math.pow(10, Math.floor(Math.log10(Math.max(raw, 1)))); const m = raw / p; return Math.max(1, (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p); }
+function drawChart(){
+  const X = SC[active], { g, W, H } = fit(el.chart), isCop = X.key === 'cop';
+  g.clearRect(0, 0, W, H);
+  const padL = 46, padR = 14, padT = 12, padB = 36, pw = W - padL - padR, ph = H - padT - padB;
+  const h = X.history, n = h.length, yMax = isCop ? 3 : AMB_MAX;
+  const yT = isCop ? [0, 1, 2, 3] : [0, 100, 200, 300, 400, 500];
+  const xMax = Math.max(n, 50);
+  const xs = e => padL + ((e - 1) / (xMax - 1)) * pw, ys = v => padT + ph - (clamp(v, 0, yMax) / yMax) * ph;
+  const accent = isCop ? C.cop : C.amb;
+  g.font = '11px "IBM Plex Mono", ui-monospace, monospace'; g.lineWidth = 1;
+  g.textAlign = 'right'; g.textBaseline = 'middle';
+  yT.forEach(v => { const y = Math.round(ys(v)) + .5; g.strokeStyle = C['line-soft']; g.beginPath(); g.moveTo(padL, y); g.lineTo(W - padR, y); g.stroke(); g.fillStyle = C.muted; g.fillText(isCop ? String(v) : String(v), padL - 8, y); });
+  g.save(); g.translate(12, padT + ph/2); g.rotate(-Math.PI/2); g.textAlign = 'center'; g.fillStyle = C.muted; g.fillText(isCop ? 'thieves caught' : 'minutes', 0, 0); g.restore();
+  const st = niceStep(xMax / 6);
+  g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = C.muted;
+  g.fillText('1', xs(1), H - padB + 17);
+  for (let e = st; e <= xMax; e += st) if (xs(e) - xs(1) > 24) g.fillText(String(e), xs(e), H - padB + 17);
+  g.textAlign = 'right'; g.fillText('episode', W - padR, H - 1);
+  if (!n){ g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = C.muted; g.font = '13px "IBM Plex Sans", sans-serif'; g.fillText('Each finished training episode adds a point here', padL + pw/2, padT + ph/2); return; }
+  const stride = Math.ceil(n / 1500);
+  for (let i = 0; i < n; i += stride){
+    const r = h[i]; let v = r.value;
+    if (isCop) v += (((i * 37) % 13) - 6) / 60;
+    g.fillStyle = (!isCop && !r.success) ? hexA(C.muted, .55) : hexA(accent, .3);
+    g.beginPath(); g.arc(xs(i + 1), ys(v), 2.2, 0, Math.PI*2); g.fill();
+  }
+  const W25 = 25;
+  const ma = key => { const out = []; let sum = 0; for (let i = 0; i < n; i++){ sum += h[i][key]; if (i >= W25) sum -= h[i - W25][key]; out.push(sum / Math.min(i + 1, W25)); } return out; };
+  const line = (arr, color, width, dash) => { g.save(); g.strokeStyle = color; g.lineWidth = width; g.setLineDash(dash || []); g.lineJoin = 'round'; g.beginPath(); arr.forEach((v, i) => { const x = xs(i + 1), y = ys(v); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke(); g.restore(); };
+  if (!isCop) line(ma('optimal'), C.ok, 1.6, [5, 4]);
+  const m = ma('value'); line(m, accent, 2.6);
+  const lx = xs(n), ly = ys(m[n - 1]);
+  g.fillStyle = accent; g.beginPath(); g.arc(lx, ly, 4, 0, Math.PI*2); g.fill();
+}
+function renderSnaps(){
+  const X = SC[active];
+  if (!X.milestones.length){ el.snaps.innerHTML = `<p class="empty">No snapshots yet. The first one is saved when training episode 1 ends.</p>`; return; }
+  el.snaps.innerHTML = X.milestones.map((m, i) => `<figure><canvas data-i="${i}" aria-label="Episode ${m.ep} route"></canvas><figcaption><b>EPISODE ${m.ep}</b>${X.def.caption(m.rec)}</figcaption></figure>`).join('');
+  el.snaps.querySelectorAll('canvas').forEach(cv => { const m = X.milestones[+cv.dataset.i], { g, W } = fit(cv); X.def.draw(g, W, m.snap, true, 0); });
+}
+
+document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => { if (active === b.dataset.env) return; active = b.dataset.env; renderStatic(); }));
+el.train.addEventListener('click', () => {
+  const X = SC[active];
+  if (X.mode === 'train'){ X.mode = 'idle'; }
+  else { if (X.needsReset || X.mode === 'test' || X.mode === 'rule'){ X.s = X.env.reset(); X.needsReset = false; } X.testResult = null; X.mode = 'train'; }
+  panelDirty = true;
+});
+el.fast.addEventListener('click', () => { const X = SC[active]; X.mode = 'idle'; X.testResult = null; X.fastTotal = X.fastRemaining = X.def.fastN; panelDirty = true; });
+el.test.addEventListener('click', () => startTest(SC[active]));
+el.rule.addEventListener('click', () => startTest(SC[active], 'rule'));
+el.reset.addEventListener('click', () => {
+  const X = SC[active];
+  X.agent.reset(); X.history = []; X.milestones = []; X.episode = 0; X.mode = 'idle'; X.testResult = null; X.needsReset = false; X.s = X.env.reset();
+  chartDirty = snapsDirty = panelDirty = true;
+});
+el.speed.addEventListener('input', () => { speedIdx = +el.speed.value; el.speedOut.textContent = SPEEDS[speedIdx].label + ' steps/s'; });
+
+function onTheme(){ readColors(); chartDirty = snapsDirty = true; }
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onTheme);
+new MutationObserver(onTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+let resizeT; new ResizeObserver(() => { clearTimeout(resizeT); resizeT = setTimeout(() => { chartDirty = snapsDirty = true; }, 120); }).observe(el.app);
+
+let frame = 0;
+function loop(ts){
+  frame++;
+  const X = SC[active];
+  if (X.fastRemaining > 0){
+    const t0 = performance.now();
+    while (X.fastRemaining > 0 && performance.now() - t0 < 14){ headlessEpisode(X); X.fastRemaining--; }
+    panelDirty = true;
+    if (X.fastRemaining === 0) startTest(X);
+  } else if (X.mode === 'train' || X.mode === 'test' || X.mode === 'rule'){
+    const sp = SPEEDS[speedIdx], running = () => X.mode === 'train' || X.mode === 'test' || X.mode === 'rule';
+    if (frame % sp.every === 0) for (let i = 0; i < sp.n && running(); i++) stepOnce(X);
+  }
+  const { g, W } = fit(el.main);
+  X.def.draw(g, W, X.env, false, ts / 1000);
+  renderStatus();
+  if (panelDirty){ renderPanel(); panelDirty = false; }
+  if (chartDirty){ drawChart(); chartDirty = false; }
+  if (snapsDirty){ renderSnaps(); snapsDirty = false; }
+  requestAnimationFrame(loop);
+}
+
+readColors();
+SC.cop.mode = 'train';
+renderStatic();
+requestAnimationFrame(loop);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { chartDirty = snapsDirty = true; });
+})();
+</script>
